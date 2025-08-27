@@ -8,10 +8,14 @@
 # 처음 실행할 때 설정 (터미널에)
 cd delivery
 python3 -m venv myenv
-source myenv/bin/activate
+source myenv1/bin/activate
 pip install -r requirements.txt
 
 # 실행할 때
 cd delivery
-source myenv/bin/activate
+source myenv1/bin/activate
 python agents.py
+
+python -m venv myenv
+.\myenv\Scripts\Activate.ps1
+pip install -r requirements.txt.

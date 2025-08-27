@@ -7,7 +7,7 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.prompts import ChatPromptTemplate
+from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain.output_parsers import PydanticOutputParser
@@ -23,11 +23,12 @@ import dotenv
 import json
 import threading
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+load_dotenv("env_1.env")
 
-dotenv.load_dotenv()
 
 # --- App, LLM, Parsers ---
-baselinemode = False
+baselinemode = True
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 json_mode = {"response_format": {"type": "json_object"}}
 llm1 = ChatOpenAI(model="gpt-4.1-nano-2025-04-14", temperature=0.3, model_kwargs=json_mode)
@@ -171,7 +172,7 @@ def build_chain4_input(history: str, desire: str, thoughts: List[Any], wm: World
         "a_opinion_strength": map_opinion_strength(wm.a_opinion_strength),
     }
 
-def pick_best_item_by_score(items: List[Any], evals: List[Any], threshold: float = 4.7, score_key: str = "score") -> Any:
+def pick_best_desire(items: List[Any], evals: List[Any], score_key: str = "score") -> Any:
     if not items:
         return None
     if not evals:
@@ -188,7 +189,26 @@ def pick_best_item_by_score(items: List[Any], evals: List[Any], threshold: float
         if score > best_score:
             best_item, best_score = item, score
 
-    return best_item if best_score > threshold else None
+    return best_item
+
+def pick_best_item_by_score(items: List[Any], evals: List[Any], threshold: float = 4.76, score_key: str = "score") -> Any:
+    if not items:
+        return None
+    if not evals:
+        return items[0]
+
+    best_item, best_score = None, float("-inf")
+    for item, evaluation in zip(items, evals):
+        score = 0.0
+        if isinstance(evaluation, dict):
+            score = float(evaluation.get(score_key, 0.0))
+        else:
+            score = float(getattr(evaluation, score_key, 0.0))
+
+        if score > best_score:
+            best_item, best_score = item, score
+
+    return best_item if best_score >= threshold else None
 
 # --- Persuasion Handling ---
 def handle_persuasion(c1_out: Dict[str, Any], wm: WorldModel, channel: str) -> Optional[Dict[str, str]]:
@@ -197,7 +217,7 @@ def handle_persuasion(c1_out: Dict[str, Any], wm: WorldModel, channel: str) -> O
     # Assuming user is 'u1' for simplicity. This needs to be adapted for multi-user.
     user_position = wm.u1_position 
     
-    if persu_score > 4.2 and user_position != wm.a_position:
+    if persu_score >= 4.5 and user_position != wm.a_position:
         new_strength = max(1, wm.a_opinion_strength - 0.5)
         wm.update_agent_opinion_strength(new_strength)
         log_event("persuasion_success", channel, {"old_strength": wm.a_opinion_strength + 0.5, "new_strength": new_strength})
@@ -212,6 +232,7 @@ template2 = ChatPromptTemplate.from_template(DESIRE_SHAPER)
 template3 = ChatPromptTemplate.from_template(THOUGHT_FORMATION)
 template4 = ChatPromptTemplate.from_template(THOUGHT_EVALUATION)
 template5 = ChatPromptTemplate.from_template(THOUGHT_ARTICULATOR)
+template_direct_conversation = PromptTemplate.from_template(DIRECT_CONVERSATION_PROMPT)
 
 chain1 = (
     {
@@ -232,6 +253,7 @@ chain2 = template2 | llm2 | parser2
 chain3 = template3 | llm3 | parser3
 chain4 = template4 | llm4 | parser4
 chain5 = template5 | llm5 | parser5
+chain_direct_conversation = template_direct_conversation | llm5 | parser5
 
 
 # --- Pipeline ---
@@ -281,8 +303,8 @@ def run_pipeline(latest_user_utterance: str, channel: str, wm: WorldModel, mem: 
         log_event("chain2_output", channel, {"output": _safe_jsonable(c2_out)})
 
         desires = c2_out.desires
-        best_desire_obj = pick_best_item_by_score(desires, desires, score_key="motivation_score")
-        selected_desire = best_desire_obj.desire if best_desire_obj else "Seek Understanding"
+        best_desire_obj = pick_best_desire(desires, desires, score_key="motivation_score")
+        selected_desire = best_desire_obj.desire if best_desire_obj else "INTRODUCE A NEW PERSPECTIVE OR ANGLE"
         log_event("selected_desire", channel, {"selected_desire": selected_desire})
 
     retrieved = retrieve_context(head.get("interp", ""), k=5)
@@ -316,6 +338,18 @@ def run_pipeline(latest_user_utterance: str, channel: str, wm: WorldModel, mem: 
     return final_str
 
 # --- Slack Handler ---
+BOT_USER_ID = None
+
+def initialize_bot_id():
+    global BOT_USER_ID
+    try:
+        response = app.client.auth_test()
+        BOT_USER_ID = response["user_id"]
+        log_event("bot_id_initialized", "system", {"bot_user_id": BOT_USER_ID})
+    except Exception as e:
+        log_event("error_initializing_bot_id", "system", {"error": repr(e)})
+        print("Error getting bot user ID:", e)
+
 channel_user_labels: Dict[str, Dict[str, str]] = defaultdict(dict)
 def _assign_label(channel: str, user_id: str) -> str:
     if user_id not in channel_user_labels[channel]:
@@ -332,13 +366,33 @@ def message_handler(message, say, logger):
         
         log_event("user_message", channel, {"user_id": user_id, "text": user_text})
         
-        user_label = _assign_label(channel, user_id)
-        working_memory.add_turn(channel, user_label, user_text)
-        
-        output = run_pipeline(user_text, channel, world_model, working_memory)
-        
-        if output:
-            say(text=output)
+        if BOT_USER_ID and f"<@{BOT_USER_ID}>" in user_text:
+            # Handle direct mention
+            log_event("direct_mention", channel, {"user_text": user_text})
+            
+            history = working_memory.get_history_string(channel)
+            
+            direct_conversation_input = {
+                "history": history,
+                "user_question": user_text,
+                "a_position": world_model.a_position,
+                "a_opinion_strength": map_opinion_strength(world_model.a_opinion_strength)
+            }
+            log_event("direct_conversation_chain_input", channel, {"input": direct_conversation_input})
+            
+            response = chain_direct_conversation.invoke(direct_conversation_input)
+            
+            log_event("direct_conversation_chain_output", channel, {"output": response})
+            say(text=response)
+        else:
+            # Existing logic
+            user_label = _assign_label(channel, user_id)
+            working_memory.add_turn(channel, user_label, user_text)
+            
+            output = run_pipeline(user_text, channel, world_model, working_memory)
+            
+            if output:
+                say(text=output)
             
     except Exception as e:
         logger.exception(e)
@@ -348,4 +402,5 @@ def message_handler(message, say, logger):
 # --- Main ---
 if __name__ == "__main__":
     log_event("boot", "system", {"pid": os.getpid()})
+    initialize_bot_id()
     SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()

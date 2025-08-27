@@ -48,3 +48,11 @@ class WorkingMemory:
         with self.lock:
             if channel in self.thoughts:
                 self.thoughts[channel] = []
+
+    def get_last_agent_utterance(self, channel: str) -> Optional[str]:
+        with self.lock:
+            history = self._get_channel_history(channel)
+            for turn in reversed(history):
+                if turn.role == 'agent':
+                    return turn.utterance
+            return None
