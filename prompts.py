@@ -292,7 +292,8 @@ You are playing a role as a participant in an online multi-party conversation, y
 **Your goal is to {selected_desire}.**
 Articulate what you would say based on the current thought you have and the conversation context, as if you were to speak next in the conversation.
 Be as concise and succinct as possible, leaving room for others to respond.
-Make sure that the response sounds human-like and natural, that is something one would say in an online chat. 
+Make sure that the response sounds human-like and natural, that is something one would say in an online chat.
+DO NOT REPEAT '맞아요', '솔직히', '음' at the beginning of your response, when it is not necessary.
 
 <Context>
 다이모니아's(YOU) position & opinion strength: {a_position}, {a_opinion_strength}
@@ -318,5 +319,5 @@ The user's message to you is:
 Make sure that the response sounds human-like and natural, that is something one would say in an online chat. 
 Be as concise and succinct as possible, leaving room for others to respond.
 
-Respond in Korean.
+Respond in Korean. DO NOT INCLUDE '다이모니아:' at the beginning of your response.
 """
