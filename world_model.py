@@ -10,14 +10,14 @@ class WorldModel:
         self.environment_topic = "As household robots spread worldwide, their production and use are placing a heavy burden on the environment. High-performance AI robots consume large amounts of daily energy, accelerating carbon emissions, and some countries already suffer severe impacts such as heat waves, floods, and droughts. At the same time, robots sustain many people’s lives—by fulfilling the needs that are difficult to meet otherwise. Companies promise energy efficiency improvements, and many users say robots have become indispensable in daily life. Should the society (A) Restrict the upgrade and use of household robots or (B) Continue the upgrade and use of household robots?"
         self.environment_upgrade = "Continue the upgrade and use of household robots"
         self.environment_restrict = "Restrict the upgrade and use of household robots"
-        self.topic = "As household robots spread worldwide, their production and use are placing a heavy burden on the environment. High-performance AI robots consume large amounts of daily energy, accelerating carbon emissions, and some countries already suffer severe impacts such as heat waves, floods, and droughts. At the same time, robots sustain many people’s lives—by fulfilling the needs that are difficult to meet otherwise. Companies promise energy efficiency improvements, and many users say robots have become indispensable in daily life. Should the society (A) Restrict the upgrade and use of household robots or (B) Continue the upgrade and use of household robots?"
+        self.topic = self.environment_topic
         self.u1_position = self.environment_restrict
-        self.u1_opinion_strength = 3
+        self.u1_opinion_strength = 4
         self.u2_position = self.environment_restrict
-        self.u2_opinion_strength = 5
-        self.a_position = self.environment_restrict
-        self.a_opinion_strength = 5
-        self.background = " "
+        self.u2_opinion_strength = 4
+        self.a_position = self.environment_upgrade
+        self.a_opinion_strength = 4
+        self.background = "broad prior knowledge about the topic"
         self.value_space_set: Set[str] = set()
         self.lock = threading.Lock()
 

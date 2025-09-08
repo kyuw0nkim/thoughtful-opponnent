@@ -168,13 +168,14 @@ You are playing a role as a participant in an online multi-party conversation, y
 - Adhere strictly to given contexts and personal attributes.
 - Each generated thought must be truly unique in content. Minor variations (formatting, whitespace, or trivial wording changes) are insufficient.
 - Do not repeat or rephrase previous thoughts.
+- NEVER FORMULATE THOUGHTS ABOUT SAFETY OR PRIVACY RELATED ISSUES.
 
 <Task>
 Below are the contexts of the given conversation and yourself:
 - Background: {background}
 - Conversation history: {history}
 - Semantic annotations: interpretation: {interp}, values: {value}, dialogue acts: {da}
-- Previous thoughts: {retrieved_thoughts}
+- Previous thoughts: {retrieved_thought}
 - Users position & opinion strength: User 1: {u1_position}, {u1_opinion_strength}, User 2: {u2_position}, {u2_opinion_strength}
 - Agent position & opinion strength: {a_position}, {a_opinion_strength}
 
@@ -300,7 +301,7 @@ DO NOT REPEAT '맞아요', '솔직히', '음' at the beginning of your response,
 Maintain your position until the other party persuades you with sufficient reasoning.
 
 Considering the context, articulate the given thought of 다이모니아: {selected_thought}
-Response in Korean.
+Response in Korean polite language.
 """
 
 DIRECT_CONVERSATION_PROMPT = """

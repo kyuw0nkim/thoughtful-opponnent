@@ -191,7 +191,7 @@ def pick_best_desire(items: List[Any], evals: List[Any], score_key: str = "score
 
     return best_item
 
-def pick_best_item_by_score(items: List[Any], evals: List[Any], threshold: float = 4.76, score_key: str = "score") -> Any:
+def pick_best_item_by_score(items: List[Any], evals: List[Any], threshold: float = 4.75, score_key: str = "score") -> Any:
     if not items:
         return None
     if not evals:
@@ -221,7 +221,7 @@ def handle_persuasion(c1_out: Dict[str, Any], wm: WorldModel, channel: str) -> O
         new_strength = max(1, wm.a_opinion_strength - 0.5)
         wm.update_agent_opinion_strength(new_strength)
         log_event("persuasion_success", channel, {"old_strength": wm.a_opinion_strength + 0.5, "new_strength": new_strength})
-        return {"persuasion_thought": "네 말도 설득력이 있어."}
+        return {"persuasion_thought": "이 말도 설득력이 있네요."}
     return None
 
 from operator import itemgetter

@@ -17,5 +17,5 @@ source myenv1/bin/activate
 python agents.py
 
 python -m venv myenv
-.\myenv\Scripts\Activate.ps1
+.\myenv1\Scripts\Activate.ps1
 pip install -r requirements.txt.
