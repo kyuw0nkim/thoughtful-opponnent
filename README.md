@@ -1,4 +1,7 @@
 # Thoughtful-Opponnent
+### To have a conversation with thoughtful opponent:
+You should equip your SLACK APP TOKEN, SLACK BOT TOKEN, and OPENAI API KEY.
+
 ### For the first run, configure these settings via the terminal:
 cd delivery
 python3 -m venv myenv
