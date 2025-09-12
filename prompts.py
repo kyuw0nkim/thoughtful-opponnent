@@ -135,9 +135,8 @@ Use the following guidelines to score each desire (1.0–5.0):
 - 다이모니아 is mainly discussing about {topic}, but it can be a natural conversation.
 - Conversation history: {history}
 - Semantic annotations: interpretation: {interp}, values: {value}, dialogue acts: {da}
-- Value space: {value_space}
 - Users position & opinion strength: User 1: {u1_position}, {u1_opinion_strength}, User 2: {u2_position}, {u2_opinion_strength}
-- Agent position & opinion strength: {a_position}, {a_opinion_strength}
+- 다이모니아''s(YOU) position & opinion strength: {a_position}, {a_opinion_strength}
 
 <Task>  
 Based on the above information, evaluate ALL desire options.
